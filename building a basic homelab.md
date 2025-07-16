@@ -65,3 +65,80 @@ Now you can start the Kali virtual machine. Note: The default credentials of the
 
 In order to prevent your host machine to get infected, first you need to properly configure the virtual machines.
 
+## 4. Configure the network:
+
+When selecting any of the virtual machines we have the option to select `Settings`, once there, go to `Network`, here we will find different network options:
+
+![Network options](./assets/network-options.png)
+
+### NAT (Default):
+
+This option creates a separate network using the host network adapter and will asign it to each virtual machine (example: if we have three virtual machines, they will have three different networks).
+
+### NAT Network:
+
+Similar to NAT, but instead of having three separate networks, the virtual machines will all mesh into one network. 
+
+### Bridged adapter:
+
+This will make the virtual machines act as physical machines, meaning they will be on the same network as the host machine (Do not execute malware analysis using this mode, because this machines will have access to the internet and the LAN).
+
+### Host-Only adapter:
+
+These virtual machines are only accessible to the host machine, they will not have access to the internet nor will have access to the LAN.
+
+### Internal network:
+
+This is an ideal option to use when performing malware analysis, as this option puts the virtual machine into their own network. You will have to statically assing each and every one of the virtual machines and IPs. They will not have access to the internet and they cannot access the LAN.
+
+### Not attached:
+
+The network addapter is not attached.
+
+<hr />
+
+Depending on the kind of practices we want to do in our virtual machines, the configurations will vary: 
+
+For just testing tools we can leave the machines network configured by default, using NAT. 
+
+For more complicated scenarios (like analyzing malware) we need to perform better configurations to keep our host safe: we need to change our network configuration to `Internal network` and name that network. To do that, we click on the settings of the virtual machine, go to Network and in `Attached to:` select `Internal network`, after that, name your network.
+
+![Name the network](./assets/name-the-network.png)
+
+After chaning this configuration in both Windows 10 and Kali Linux machines, they should be in the same network, but we still need to stastically assign the IP address on both.
+
+First, let's do it with the Windows 10 machine. Initiate the machine, right click in the globe icon in the taskbar and select `Open network and internet settings`.
+
+![](./assets/open-network-internet-settings.png)
+
+In the next windows, scroll down until you find `Change adapter options` and click on it.
+
+![](./assets/change-adapter-options.png)
+
+Next, right-click the Ethernet icon, click on `Properties` and look for the checkbox `Internet Protocol Version 4`.
+
+![](./assets/ipv4.png)
+
+Select it and click in the `Properties` button.
+By default it will be setted to DHCP, however we will clik on `Use the following IP address`. As for the IP address I will use `192.168.20.10` and I'll leave the subnet mask in `255.255.255.0` and the Default gateway as it is and the DNS in blank. 
+If we open a Command prompt and run `ipconfig` we should see our new IP address.
+
+![](./assets/check-new-ip.png)
+
+Now is the turn of the Kali machine. Locate the ethernet icon located at the top right corner, right click on it and select `Edit connections`. 
+
+![](./assets/linux-edit-connections.png)
+
+Select `Wired connection 1`, click on the gear icon at the bottom and in the next window select the `IPv4 Settings` tab. Once there, change the Method from `Automatic (DHCP)` to `Manual`. hen inside Addresses click on `Add` and enter your IP address, in my case I'm using `192.168.20.11`, Netmask at `24`, and Gateway, DNS serers and Search domains in blank.
+
+![](./assets/kali-add-new-ip.png)
+
+To check the new IP address, right click anywhere in the desktop and open a terminal.
+
+![](./assets/check-linux-new-ip.png)
+
+To check the connectivity between the two machines, we will ping our Kali machine on Windows, running `ping 192.168.20.11` from the Windows command line.
+
+![](./assets/pinging-kali.png)
+
+Now the two machines have connectivity, take a snapshot of both of them before starting playing around.
