@@ -142,3 +142,28 @@ To check the connectivity between the two machines, we will ping our Kali machin
 ![](./assets/pinging-kali.png)
 
 Now the two machines have connectivity, take a snapshot of both of them before starting playing around.
+
+## 5. Install Sysmon in Windows 10:
+
+Sysmon (System monitor) is a Microsoft tool, part of the Sysinternals Suite, that allows to log detailed system activity to the Windows Event Log. 
+
+To install it, first, run the Windows 10 virtual machine, open a web browser and go to the [Sysmon download page](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon) and click in `Download Sysmon`.
+
+![](./assets/sysmon-page.png)
+
+Next, navigate to [this page](https://github.com/olafhartong/sysmon-modular/blob/master/sysmonconfig.xml) and download the file `sysmonconfig.xml`.
+
+Once everything is downloaded, extract the sysmon compressed file and move the `sysmonconfig.xml` file inside of the decompressed folder.
+Inside of this folder, open a Powershell console with administrator privileges.
+
+![](./assets/sysmon-install-dir.png)
+
+Now, in the Powershell console, type `.\Sysmon64.exe -i .\sysmonconfig.xml` and hit Enter to install Sysmon. To check if it's installed, go to windows Event Viewer and access to `Applications and services logs > Microsoft > Windows` and you should see a `Sysmon` folder with an `Operational` file inside, if we click it, we'll see a lot of telemetry about the system that will help us.
+
+![](./assets/sysmon-telemetry.png)
+
+## 6. Install Splunk in Windows 10:
+
+To install Splunk, just navigate to the [Splunk website](https://www.splunk.com/) and download `Splunk enterprise`. You'll need to create an account for it.
+Run the installer and when prompt about which type of installation select `Local System`, create a username and a password and click in Install.
+Once installed, open your browser and Splunk should be installed in your `localhost` in the `8000` port.
