@@ -1,5 +1,7 @@
 # Building a basic homelab
 
+Documentation of the setup process for my personal cybersecurity home lab for practice — a step-by-step guide using VirtualBox, Kali Linux, Windows 10, Sysmon, and Splunk. Covers network configuration, malware simulation, and telemetry analysis.
+
 ## 1. Download and install VirtualBox
 
 Go to the [Virtual box download page](https://www.virtualbox.org/wiki/Downloads) and click on Windows hosts.
