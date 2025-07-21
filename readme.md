@@ -4,7 +4,7 @@ Documentation of the setup process for my personal cybersecurity home lab for pr
 
 ## 1. Download and install VirtualBox
 
-Go to the [Virtual box download page](https://www.virtualbox.org/wiki/Downloads) and click on Windows hosts.
+Go to the [Virtual box download page](https://www.virtualbox.org/wiki/Downloads) and click on **Windows hosts**.
 
 ![virtualbox-download-page.png](./assets/virtualbox-download-page.png)
 
@@ -177,11 +177,8 @@ Inside that folder, open a PowerShell console with administrator privileges.
 
 Now, in the Powershell console, type `.\Sysmon64.exe -i .\sysmonconfig.xml` and press **Enter** to install Sysmon.
 
-To check if Sysmon is installed, open **Windows Event Viewer** and navigate to:  
-**Applications and Services Logs > Microsoft > Windows**.
-
-You should see a **Sysmon** folder with an **Operational** log inside.  
-Click on it, and you'll see detailed telemetry about the system that can assist with monitoring and analysis.
+To check if Sysmon is installed, open the **Event Viewer** and navigate to:  
+**Applications and Services Logs > Microsoft > Windows** and you should see a **Sysmon** folder with an **Operational** log inside. Click on it, and you'll see detailed telemetry about the system that can assist with monitoring and analysis.
 
 ![](./assets/sysmon-telemetry.png)
 
