@@ -1,4 +1,4 @@
-# Basic homelab
+# Basic Home Lab
 
 ## 1. Download and install VirtualBox
 

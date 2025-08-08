@@ -76,5 +76,30 @@ Now you can start the Kali virtual machine.
 
 ![Start Kali Linux](../basic-home-lab/assets/start-kali-linux.png)
 
-## 4. Install Windows Server
+## 4. Install Windows Server 2022
+
+I downloaded Windows Server from [Microsoft Evalatuion Center](https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2022) website, selecting the ISO file.
+
+Once in Virtual Box, I named the machine `ADDC01`, added the ISO image, left all the settings as default but check in **Skip Unattended Installation** because I do not want Virtual Box to automatically install it. In the **Hardware** tab I setted the **Base Memory** to 4GB, and that's all the configuration so far.
+
+Once in the virtual machine I choose the **Windows Server 2022 Standard Evaluation (Desktop Experience)** version of the OS. 
+
+In the **Type of installation** screen I selected **Custom** and click **Next** until the installation started.
+
+After the set up was completed, I was presented with the **Customize settings** screen, where I created a password and then a **Login** screen to Enter the credentials I just created. Once in the Desktop, the **Server Manager** will open automatically. 
+
+## 5. Install Splunk Server
+
+I downloaded the [Ubuntu Server](https://ubuntu.com/server) **22.04.5 LTS version**. Once in VirtualBox, I created a new machine named **Splunk** with the default configuration but checking **Skip Unattended Installation**, I set the **Base memory** in 4GB, the **Processors** in 2 and the **Virtual Hard disk** in 50GB.
+
+Run the virtual machine and in the presented screen select **Try or Install Ubuntu Server**, continuing with the default options unitl the **Profile setup** screen, there I entered the credentials, hit **Done**. I left the next configurations by default and started the installation.
+After it finished, I rebooted the virtual machine. If you are presented with the **Failed unmounting /cdrom** error, just press Enter.
+
+![Error](./assets/splunk-boot-error.png)
+
+After Ubuntu Server finished the reboot, I was presented with a login screen where I entered the credentials I created earlier. After a successfull login, I run the command `sudo apt-get update && sudo apt-get upgrade -y` to update and upgrade all the repositories and after that the server is ready to go.
+
+At this point, I have the four virtual machines ready:
+
+![Machines](./assets/machines.jpg)
 
